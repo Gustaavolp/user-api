@@ -1,0 +1,45 @@
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: userapi-mongodb
+    restart: always
+    volumes:
+      - userapi_mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=user_db
+
+  api:
+    build: .
+    container_name: userapi-fastapi
+    restart: always
+    depends_on:
+      - mongodb
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+      - DATABASE_NAME=user_db
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+    volumes:
+      - ./app:/app/app
+    labels:
+      - "traefik.enable=true"
+      
+      - "traefik.http.routers.userapi-http.rule=Host(`api.avoup.com`)"
+      - "traefik.http.routers.userapi-http.entrypoints=web"
+      - "traefik.http.routers.userapi-http.middlewares=redirect-to-https"
+
+      - "traefik.http.routers.userapi-https.rule=Host(`api.avoup.com`)"
+      - "traefik.http.routers.userapi-https.entrypoints=websecure"
+      - "traefik.http.routers.userapi-https.tls.certresolver=leresolver"
+
+      - "traefik.http.services.userapi.loadbalancer.server.port=8000"
+
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+
+networks:
+  default:
+    name: userapi
+    external: true
+
+volumes:
+  userapi_mongodb_data:
