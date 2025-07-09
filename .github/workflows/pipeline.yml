@@ -155,10 +155,10 @@ jobs:
       run: |
         pip install safety bandit
 
-    - name: Run safety check
+    - name: Run safety scan
       run: |
         pip install -r requirements.txt
-        safety check
+        safety scan
 
     - name: Run bandit security scan
       run: |
