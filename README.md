@@ -15,8 +15,8 @@ API REST completa para gerenciar usuários com FastAPI e MongoDB, incluindo vali
 
 ```json
 {
-  "nome": "João Silva",
-  "email": "joao@email.com",
+  "nome": "Gustavo",
+  "email": "gustavo@mail.com",
   "data_nascimento": "1990-01-15"
 }
 ```
