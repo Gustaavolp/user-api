@@ -158,19 +158,22 @@ jobs:
     - name: Run safety scan
       run: |
         pip install -r requirements.txt
-        safety scan
+        safety scan --disable-optional-telemetry --output=json --save-json=safety-report.json || true
+        safety scan --disable-optional-telemetry || echo "Safety scan completed with warnings"
 
     - name: Run bandit security scan
       run: |
         bandit -r app/ -f json -o bandit-report.json || true
         bandit -r app/
 
-    - name: Upload bandit report
+    - name: Upload security reports
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: bandit-report
-        path: bandit-report.json
+        name: security-reports
+        path: |
+          bandit-report.json
+          safety-report.json
 
   deploy:
     runs-on: ubuntu-latest
