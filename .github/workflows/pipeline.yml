@@ -139,6 +139,35 @@ jobs:
         # Clean up
         docker stop test-api
 
+    - name: Run Trivy container scan
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'user-api:latest'
+        format: 'sarif'
+        output: 'trivy-image-results.sarif'
+
+    - name: Run Trivy container scan (JSON)
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'user-api:latest'
+        format: 'json'
+        output: 'trivy-image-results.json'
+
+    - name: Upload Trivy container scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-image-results.sarif'
+
+    - name: Upload Trivy container reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: trivy-container-reports
+        path: |
+          trivy-image-results.sarif
+          trivy-image-results.json
+
   security-scan:
     runs-on: ubuntu-latest
     needs: test
@@ -146,34 +175,36 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v4
+    - name: Run Trivy filesystem scan
+      uses: aquasecurity/trivy-action@master
       with:
-        python-version: '3.11'
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-fs-results.sarif'
 
-    - name: Install security scanning tools
-      run: |
-        pip install safety bandit
+    - name: Run Trivy filesystem scan (JSON)
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'json'
+        output: 'trivy-fs-results.json'
 
-    - name: Run safety scan
-      run: |
-        pip install -r requirements.txt
-        safety scan --disable-optional-telemetry --output=json --save-json=safety-report.json || true
-        safety scan --disable-optional-telemetry || echo "Safety scan completed with warnings"
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-fs-results.sarif'
 
-    - name: Run bandit security scan
-      run: |
-        bandit -r app/ -f json -o bandit-report.json || true
-        bandit -r app/
-
-    - name: Upload security reports
+    - name: Upload Trivy reports
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: security-reports
+        name: trivy-reports
         path: |
-          bandit-report.json
-          safety-report.json
+          trivy-fs-results.sarif
+          trivy-fs-results.json
 
   deploy:
     runs-on: ubuntu-latest
