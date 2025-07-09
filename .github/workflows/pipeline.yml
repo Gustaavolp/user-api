@@ -103,12 +103,40 @@ jobs:
 
     - name: Test Docker image
       run: |
+        # Run container in background
         docker run --rm -d --name test-api -p 8000:8000 \
           -e MONGO_URL=mongodb://host.docker.internal:27017 \
           -e DATABASE_NAME=test_user_db \
           user-api:latest
-        sleep 10
-        curl -f http://localhost:8000/ || exit 1
+        
+        # Wait for container to be ready
+        echo "Waiting for container to start..."
+        sleep 15
+        
+        # Check if container is running
+        if ! docker ps | grep -q test-api; then
+          echo "Container failed to start"
+          docker logs test-api
+          exit 1
+        fi
+        
+        # Test health endpoint with retries
+        for i in {1..5}; do
+          echo "Testing health endpoint (attempt $i/5)..."
+          if curl -f --connect-timeout 5 http://localhost:8000/; then
+            echo "Health check passed!"
+            break
+          fi
+          if [ $i -eq 5 ]; then
+            echo "Health check failed after 5 attempts"
+            docker logs test-api
+            docker stop test-api
+            exit 1
+          fi
+          sleep 5
+        done
+        
+        # Clean up
         docker stop test-api
 
   security-scan:
@@ -138,7 +166,7 @@ jobs:
         bandit -r app/
 
     - name: Upload bandit report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: bandit-report
