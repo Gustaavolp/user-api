@@ -20,7 +20,7 @@ def event_loop():
     yield loop
     loop.close()
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 async def test_db():
     """Create a test database connection."""
     client = AsyncIOMotorClient(MONGO_URL)
@@ -66,6 +66,7 @@ async def test_api_key(test_db):
     }
     
     result = await test_db.api_keys.insert_one(api_key_data)
+    api_key_data["_id"] = result.inserted_id
     
     return {
         "id": str(result.inserted_id),
@@ -80,7 +81,7 @@ async def auth_headers(test_api_key):
     return {"Authorization": f"Bearer {test_api_key['key']}"}
 
 @pytest.fixture
-async def test_user_data():
+def test_user_data():
     """Sample user data for testing."""
     return {
         "nome": "João Silva",

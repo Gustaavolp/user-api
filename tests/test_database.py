@@ -5,7 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 class TestDatabaseConnection:
     """Test database connection functionality."""
     
-    def test_get_database_returns_database(self, test_db):
+    async def test_get_database_returns_database(self, test_db):
         """Test that get_database returns a database instance."""
         db = get_database()
         assert isinstance(db, AsyncIOMotorDatabase)
