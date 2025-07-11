@@ -1,0 +1,126 @@
+# Docker build context optimization
+# Exclude files and directories that are not needed in the Docker image
+
+# Version control
+.git/
+.gitignore
+
+# Docker files (avoid recursion)
+.dockerignore
+Dockerfile*
+docker-compose*.yml
+
+# Documentation
+README.md
+CLAUDE.md
+docs/
+*.md
+
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# Virtual environments
+.env
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Testing and development
+tests/
+test_*.py
+*_test.py
+pytest.ini
+.pytest_cache/
+htmlcov/
+.coverage*
+coverage.xml
+*.cover
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.claude/
+
+# OS-specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs and temporary files
+*.log
+logs/
+*.tmp
+*.temp
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+wheels/
+*.egg
+
+# CI/CD artifacts
+.github/
+*.sarif
+*.json.results
+trivy-*.sarif
+trivy-*.json
+
+# Database files (local development)
+*.db
+*.sqlite*
+data/
+mongo-data/
+
+# Environment files with secrets
+.env*
+!.env.example
+
+# Package management
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Python distribution
+.Python
+develop-eggs/
+downloads/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+share/python-wheels/
+.installed.cfg
+MANIFEST
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Node.js (if any)
+node_modules/
+npm-debug.log*
+
+# Security scan results
+bandit-report.txt
+safety-report.txt

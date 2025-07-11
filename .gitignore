@@ -149,7 +149,6 @@ Thumbs.db
 *.sqlite
 
 # Docker
-.dockerignore
 docker-compose.override.yml
 
 # Logs
