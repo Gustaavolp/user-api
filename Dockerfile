@@ -15,11 +15,11 @@ RUN groupadd --gid 1000 appuser && \
 
 WORKDIR /app
 
+RUN chown appuser:appuser /app
+
 COPY --from=builder /build/dependencies /usr/local/lib/python3.11/site-packages/
 
-COPY app/ ./app/
-
-RUN chown -R appuser:appuser /app
+COPY --chown=appuser:appuser app/ ./app/
 
 USER appuser
 
