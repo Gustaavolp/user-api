@@ -1,17 +1,18 @@
-FROM python:3.11-slim AS builder
+FROM python:3.11-alpine AS builder
 
 WORKDIR /build
 
 COPY requirements.prod.txt .
 
-RUN pip install --no-cache-dir --target=/build/dependencies -r requirements.prod.txt
+RUN apk add --no-cache gcc musl-dev && \
+    pip install --no-cache-dir --target=/build/dependencies -r requirements.prod.txt && \
+    apk del gcc musl-dev
 
-FROM python:3.11-slim AS production
+FROM python:3.11-alpine AS production
 
-RUN groupadd --gid 1000 appuser && \
-    useradd --uid 1000 --gid appuser --shell /bin/bash --create-home appuser && \
-    apt-get update && apt-get install -y curl && \
-    rm -rf /var/lib/apt/lists/*
+RUN addgroup -g 1000 appuser && \
+    adduser -u 1000 -G appuser -s /bin/sh -D appuser && \
+    apk add --no-cache curl
 
 WORKDIR /app
 
