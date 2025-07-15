@@ -21,7 +21,7 @@ async def connect_to_mongo():
     except Exception as e:
         print(f"Error connecting to MongoDB: {e}")
 
-async def close_mongo_connection():
+def close_mongo_connection():
     if mongodb.client:
         mongodb.client.close()
         print("MongoDB connection closed")

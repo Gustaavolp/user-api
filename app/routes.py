@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Security
 from typing import List
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timezone
 from .models import (
     UserCreate, UserUpdate, UserResponse,
     APIKeyCreate, APIKeyUpdate, APIKeyResponse, APIKeyCreated,
@@ -11,6 +11,13 @@ from .database import get_database
 from .auth import verify_api_key_dependency
 
 router = APIRouter()
+
+# Constants for error messages
+KEY_PREVIEW_PLACEHOLDER = "********"
+INVALID_API_KEY_ID_FORMAT = "Invalid API key ID format"
+API_KEY_NOT_FOUND = "API key not found"
+INVALID_USER_ID_FORMAT = "Invalid user ID format"
+USER_NOT_FOUND = "User not found"
 
 @router.post("/api-keys", response_model=APIKeyCreated, status_code=status.HTTP_201_CREATED, tags=["api-keys"])
 async def create_api_key(api_key: APIKeyCreate):
@@ -27,7 +34,7 @@ async def create_api_key(api_key: APIKeyCreate):
         "description": api_key.description,
         "is_active": api_key.is_active,
         "key_hash": key_hash,
-        "created_at": datetime.utcnow(),
+        "created_at": datetime.now(timezone.utc),
         "last_used": None
     }
     
@@ -53,7 +60,7 @@ async def get_api_keys(api_key_data: dict = Security(verify_api_key_dependency))
     async for key_doc in db.api_keys.find().sort("created_at", -1):
         api_keys.append(APIKeyResponse(
             **key_doc,
-            key_preview=key_doc.get("key_preview", "********")
+            key_preview=key_doc.get("key_preview", KEY_PREVIEW_PLACEHOLDER)
         ))
     return api_keys
 
@@ -64,7 +71,7 @@ async def get_api_key(key_id: str, api_key_data: dict = Security(verify_api_key_
     if not ObjectId.is_valid(key_id):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid API key ID format"
+            detail=INVALID_API_KEY_ID_FORMAT
         )
     
     db = get_database()
@@ -73,12 +80,12 @@ async def get_api_key(key_id: str, api_key_data: dict = Security(verify_api_key_
     if not key_doc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="API key not found"
+            detail=API_KEY_NOT_FOUND
         )
     
     return APIKeyResponse(
         **key_doc,
-        key_preview=key_doc.get("key_preview", "********")
+        key_preview=key_doc.get("key_preview", KEY_PREVIEW_PLACEHOLDER)
     )
 
 
@@ -88,7 +95,7 @@ async def update_api_key(key_id: str, api_key_update: APIKeyUpdate, api_key_data
     if not ObjectId.is_valid(key_id):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid API key ID format"
+            detail=INVALID_API_KEY_ID_FORMAT
         )
     
     db = get_database()
@@ -97,7 +104,7 @@ async def update_api_key(key_id: str, api_key_update: APIKeyUpdate, api_key_data
     if not existing_key:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="API key not found"
+            detail=API_KEY_NOT_FOUND
         )
     
     update_data = {k: v for k, v in api_key_update.model_dump().items() if v is not None}
@@ -121,7 +128,7 @@ async def delete_api_key(key_id: str, api_key_data: dict = Security(verify_api_k
     if not ObjectId.is_valid(key_id):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid API key ID format"
+            detail=INVALID_API_KEY_ID_FORMAT
         )
     
     db = get_database()
@@ -131,7 +138,7 @@ async def delete_api_key(key_id: str, api_key_data: dict = Security(verify_api_k
     if result.deleted_count == 0:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="API key not found"
+            detail=API_KEY_NOT_FOUND
         )
     
     return None
@@ -172,7 +179,7 @@ async def get_user(user_id: str, api_key_data: dict = Security(verify_api_key_de
     if not ObjectId.is_valid(user_id):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid user ID format"
+            detail=INVALID_USER_ID_FORMAT
         )
     
     db = get_database()
@@ -181,7 +188,7 @@ async def get_user(user_id: str, api_key_data: dict = Security(verify_api_key_de
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            detail=USER_NOT_FOUND
         )
     
     return UserResponse(**user)
@@ -191,7 +198,7 @@ async def update_user(user_id: str, user_update: UserUpdate, api_key_data: dict 
     if not ObjectId.is_valid(user_id):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid user ID format"
+            detail=INVALID_USER_ID_FORMAT
         )
     
     db = get_database()
@@ -200,7 +207,7 @@ async def update_user(user_id: str, user_update: UserUpdate, api_key_data: dict 
     if not existing_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            detail=USER_NOT_FOUND
         )
     
     update_data = {k: v for k, v in user_update.model_dump().items() if v is not None}
@@ -235,7 +242,7 @@ async def delete_user(user_id: str, api_key_data: dict = Security(verify_api_key
     if not ObjectId.is_valid(user_id):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid user ID format"
+            detail=INVALID_USER_ID_FORMAT
         )
     
     db = get_database()
@@ -245,7 +252,7 @@ async def delete_user(user_id: str, api_key_data: dict = Security(verify_api_key
     if result.deleted_count == 0:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            detail=USER_NOT_FOUND
         )
     
     return None

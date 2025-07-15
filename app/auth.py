@@ -1,6 +1,6 @@
 from fastapi import HTTPException, Security, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from datetime import datetime
+from datetime import datetime, timezone
 from bson import ObjectId
 from .database import get_database
 from .models import verify_api_key
@@ -36,7 +36,7 @@ async def get_current_api_key(credentials: HTTPAuthorizationCredentials = Securi
             # Update last_used timestamp
             await db.api_keys.update_one(
                 {"_id": key_doc["_id"]},
-                {"$set": {"last_used": datetime.utcnow()}}
+                {"$set": {"last_used": datetime.now(timezone.utc)}}
             )
             return key_doc
     
@@ -47,7 +47,7 @@ async def get_current_api_key(credentials: HTTPAuthorizationCredentials = Securi
     )
 
 
-async def verify_api_key_dependency(api_key_data: dict = Security(get_current_api_key)) -> dict:
+def verify_api_key_dependency(api_key_data: dict = Security(get_current_api_key)) -> dict:
     """
     Dependency that can be used to protect endpoints.
     Returns the API key data if valid.
